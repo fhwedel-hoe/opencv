@@ -166,6 +166,11 @@ if(TARGET ocv.3rdparty.librealsense)
   list(APPEND tgts ocv.3rdparty.librealsense)
 endif()
 
+if(TARGET ocv.3rdparty.pylon)
+  list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_pylon.cpp)
+  list(APPEND tgts ocv.3rdparty.pylon)
+endif()
+
 if(TARGET ocv.3rdparty.gphoto2)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_gphoto2.cpp)
   list(APPEND tgts ocv.3rdparty.gphoto2)

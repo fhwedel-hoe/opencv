@@ -18,3 +18,11 @@ if(WITH_VA)
     ocv_include_directories(${VA_INCLUDE_DIR})
   endif()
 endif(WITH_VA)
+
+# --- Basler pylon SDK ---
+if(WITH_PYLON)
+  include("${OpenCV_SOURCE_DIR}/cmake/FindPylon.cmake")
+  if(Pylon_INCLUDE_DIRS)
+    ocv_include_directories(${Pylon_INCLUDE_DIRS})
+  endif()
+endif(WITH_PYLON)
