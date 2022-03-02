@@ -12,13 +12,11 @@
 namespace cv
 {
 
-VideoCapture_Pylon::VideoCapture_Pylon(int idx)
+VideoCapture_Pylon::VideoCapture_Pylon(const std::string & settings)
 {
-    if (idx != 0) {
-        throw std::invalid_argument("Can only open the first Pylon device. Enumeration not implemented.");
-    }
     camera = new Pylon::CBaslerUniversalInstantCamera(Pylon::CTlFactory::GetInstance().CreateFirstDevice());
     camera->Open();
+    Pylon::CFeaturePersistence::LoadFromString(settings.c_str(), &camera->GetNodeMap(), false);
     camera->StartGrabbing(grabStrategy);
 }
 
@@ -32,42 +30,21 @@ double VideoCapture_Pylon::getProperty(int propIdx) const
     switch(propIdx)
     {
     case CAP_PROP_FRAME_WIDTH:
-        //propValue = static_cast<double>(profile.width());
+        propValue = static_cast<double>(camera->Width.GetValueOrDefault(0));
         break;
     case CAP_PROP_FRAME_HEIGHT:
-        //propValue = static_cast<double>(profile.height());
+        propValue = static_cast<double>(camera->Height.GetValueOrDefault(0));
         break;
     case CAP_PROP_FPS:
-        //propValue = static_cast<double>(profile.fps());
+        if (GenApi::IsAvailable(camera->ResultingFrameRate)) {
+            propValue = static_cast<double>(camera->ResultingFrameRate());
+        }
+        if (GenApi::IsAvailable(camera->ResultingFrameRateAbs)) {
+            propValue = static_cast<double>(camera->ResultingFrameRateAbs());
+        }
         break;
     }
     return propValue;
-}
-
-bool VideoCapture_Pylon::setProperty(int propIdx, double value)
-{
-    bool isSet = false;
-    switch(propIdx)
-    {
-    case CAP_PROP_SETTINGS:
-        /* Hidden feature accessible by type-munging:
-         * @code
-         * const char * pfsptr = "…";
-         * double value;
-         * std::memcpy(&value, &pfsptr, sizeof(value)); // HERETIC INSANITY!
-         * videoCapture.set(cv::CAP_PROP_SETTINGS, value); 
-         * @endcode
-         */
-        char * pfsptr = nullptr;
-        static_assert(sizeof(pfsptr) == sizeof(value), "char * has not the same size as double");
-        std::memcpy(&pfsptr, &value, sizeof(value)); // please, for the love of god, never do this
-        camera->StopGrabbing();
-        Pylon::CFeaturePersistence::LoadFromString(pfsptr, &camera->GetNodeMap(), false);
-        camera->StartGrabbing(grabStrategy);
-        isSet = true;
-        break;
-    }
-    return isSet;
 }
 
 bool VideoCapture_Pylon::grabFrame()
@@ -77,18 +54,21 @@ bool VideoCapture_Pylon::grabFrame()
         if (ptrGrabResult->GrabSucceeded()) {
             return true;
         } else {
-            //throw std::runtime_error(std::string(ptrGrabResult->GetErrorDescription()));
-            return false;
+            CV_LOG_WARNING(NULL, "VIDEOIO(PYLON): grabFrame() " << ptrGrabResult->GetErrorDescription());
+            return true;
         }
     } else {
-        //throw std::runtime_error("Camera is not grabbing.");
+        CV_LOG_ERROR(NULL, "VIDEOIO(PYLON): grabFrame() called while camera is not grabbing.");
         return false;
     }
 }
 bool VideoCapture_Pylon::retrieveFrame(int, cv::OutputArray frame)
 {
+    if (!ptrGrabResult->GrabSucceeded()) {
+        return false;
+    }
     if (ptrGrabResult->GetPixelType() != Pylon::EPixelType::PixelType_RGB8packed) {
-        //throw std::runtime_error("Current pixel type not supported.");
+        CV_LOG_ERROR(NULL, "VIDEOIO(PYLON): Only PixelType_RGB8packed is supported.");
         return false;
     }
     cv::Mat grabResult(
@@ -110,9 +90,14 @@ bool VideoCapture_Pylon::isOpened() const
     return camera->IsOpen();
 }
 
-Ptr<IVideoCapture> create_Pylon_capture(int index)
+Ptr<IVideoCapture> create_Pylon_capture(const std::string & settings)
 {
-    return makePtr<VideoCapture_Pylon>(index);
+    try {
+        return makePtr<VideoCapture_Pylon>(settings);
+    } catch (const GenICam::RuntimeException & e) {
+        CV_LOG_WARNING(NULL, "VIDEOIO(PYLON): " << e.what());
+        return nullptr;
+    }
 }
 
 }

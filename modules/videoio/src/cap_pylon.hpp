@@ -21,11 +21,10 @@ namespace cv
 class VideoCapture_Pylon : public IVideoCapture
 {
 public:
-    VideoCapture_Pylon(int index);
+    VideoCapture_Pylon(const std::string & settings);
     virtual ~VideoCapture_Pylon();
 
     virtual double getProperty(int propIdx) const CV_OVERRIDE;
-    virtual bool setProperty(int propIdx, double propVal) CV_OVERRIDE;
 
     virtual bool grabFrame() CV_OVERRIDE;
     virtual bool retrieveFrame(int outputType, OutputArray frame) CV_OVERRIDE;

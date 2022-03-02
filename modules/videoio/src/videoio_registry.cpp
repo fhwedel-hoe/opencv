@@ -121,7 +121,7 @@ static const struct VideoBackendInfo builtin_backends[] =
     DECLARE_STATIC_BACKEND(CAP_PVAPI, "PVAPI", MODE_CAPTURE_BY_INDEX, 0, create_PvAPI_capture, 0),
 #endif
 #ifdef HAVE_PYLON
-    DECLARE_STATIC_BACKEND(CAP_PYLON, "PYLON", MODE_CAPTURE_BY_INDEX, 0, create_Pylon_capture, 0),
+    DECLARE_STATIC_BACKEND(CAP_PYLON, "PYLON", MODE_CAPTURE_BY_FILENAME, create_Pylon_capture, 0, 0),
 #endif
 #ifdef HAVE_XIMEA
     DECLARE_STATIC_BACKEND(CAP_XIAPI, "XIMEA", MODE_CAPTURE_ALL, create_XIMEA_capture_file, create_XIMEA_capture_cam, 0),

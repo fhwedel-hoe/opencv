@@ -204,7 +204,7 @@ Ptr<IVideoCapture> create_RealSense_capture(int index);
 
 Ptr<IVideoCapture> create_PvAPI_capture( int index );
 
-Ptr<IVideoCapture> create_Pylon_capture(int index);
+Ptr<IVideoCapture> create_Pylon_capture(const std::string &settings);
 
 Ptr<IVideoCapture> create_XIMEA_capture_cam( int index );
 Ptr<IVideoCapture> create_XIMEA_capture_file( const std::string &serialNumber );
